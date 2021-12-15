@@ -1,0 +1,161 @@
+#root {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 10px;
+    height: 100%;
+    width: 100%;
+    display: flex;
+  }
+.amcharts-chart-div a {display:none !important;}
+
+.teamDropDownFF
+{
+    width:325px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.teamDropDown
+{
+    width: 305px;
+}
+
+.backlogDropDownFF
+{
+    width:270px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.backlogDropDown
+{
+    width:250px;
+}
+
+
+.daysDropDownFF
+{
+    width:220px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.daysDropDown
+{
+    width:200px;
+}
+
+.tagsTextFF
+{
+    width:400px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.tagsTextField
+{
+    width:370px;
+}
+
+.selectionCard
+{
+    min-height: 101px;
+}
+.list-example-row 
+{
+    padding: 0px 12px;
+}
+
+.mainDisplayArea
+{    
+    border-spacing: 10px;
+    width: 100%;
+    min-height: 450px;
+}
+.listColumnCard{
+    min-width:450px;
+    min-height: 310px;
+    width:35%;
+    padding:2px;
+}
+.categoryColumnCard
+{
+    min-width: 300px;
+    width: 50%;
+}
+
+.cat-Work 
+{
+    background-color:royalblue;
+    color:black;
+}
+.cat-NotSet
+{
+    padding: auto;  
+}
+.cat-Wait
+{
+    background-color:rgb(255, 235, 124);
+    color:black;
+}
+
+.hiddenButton
+{
+    display:none;
+}
+
+.cat-wait-header
+{
+    background-color:rgb(255, 235, 124);
+    color:black;
+    width: 100%;
+    
+}
+.cat-work-header
+{
+    background-color:royalblue;
+    
+    color:black;
+    width: 100%;
+    
+}
+.cat-area
+{
+    height: 20px;
+}
+
+.cat-table
+{
+    width: 100%;
+    
+}
+
+.categoryColumnArea
+{
+    min-width: 650px;
+    width:65%;
+    min-height: 310px;
+    overflow-y: scroll;
+}
+.chartColumnCard
+{
+    width: 100%;
+    min-width: 650px;
+}
+.efficiencyColumnCard
+{
+    width: 100%;
+    min-width: 450px; 
+}
+.efficiencyText
+{
+    font-size: 40px;
+    font-weight: bolder;    
+}
+.categoryAveagesArea
+{
+    width: 100%;
+}
+
+.wiTable
+{
+    padding-top: 3px;
+}
