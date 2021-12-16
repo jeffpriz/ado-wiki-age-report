@@ -1,13 +1,21 @@
 import * as React from "react";
-import { showRootComponent } from "../../Common";
+
 import * as SDK from "azure-devops-extension-sdk";
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IProjectPageService,IGlobalMessagesService, getClient, IProjectInfo } from "azure-devops-extension-api";
 import { GitServiceIds, IVersionControlRepositoryService } from "azure-devops-extension-api/Git/GitServices";
-import { Page } from "azure-devops-ui/Page";
 import { GitRestClient, GitPullRequest, PullRequestStatus, GitPullRequestSearchCriteria, GitBranchStats } from "azure-devops-extension-api/Git";
-import {WikiRestClient, WikiV2} from "azure-devops-extension-api/Wiki";
+import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 
+import { Page } from "azure-devops-ui/Page";
+import { Table } from "azure-devops-ui/Table";
+
+
+import {WikiRestClient, WikiV2} from "azure-devops-extension-api/Wiki";
+import * as GetWiki from "./GetWiki"
+import { showRootComponent } from "../../Common";
+import {WikiPageBatchClient, WikiPagesBatchResult} from './restClient/JeffsWikiClient';
+import * as TableSetup from "./tableDataItems";
 
 interface IWikiAgeState {
     projectID:string;
@@ -15,7 +23,7 @@ interface IWikiAgeState {
     projectWikiID:string;
     projectWikiName:string;
     projectWikiRepoID:string;
-    
+    pageTableRows:TableSetup.ITableItem[];
 }
 
 class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
@@ -31,7 +39,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
     public initEmptyState():IWikiAgeState
     {
-        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:""};
+        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[]};
         return initState;
     }
 
@@ -58,20 +66,21 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
     private async DoWork(){
         let s:IWikiAgeState = this.state;
-        
-        console.log("Do Worlo");
         try {
-            let w:WikiV2 = await this.FindProjectWiki(s.projectID);
-
+            let wclient = await this.GetWikiAPIClient();            
+            let w:WikiV2 = await GetWiki.FindProjectWiki(wclient, s.projectID);
+            let bclient = await this.GetBatchWikiAPIClient();            
             if(w)
-            {
-                console.log("have a wiki:");
+            {   
                 s.projectWikiID = w.id;
                 s.projectWikiName = w.name;
                 s.projectWikiRepoID = w.repositoryId;
 
-                this.setState(s);
+                let pgList:WikiPagesBatchResult[] = await GetWiki.GetWikiPages(bclient,s.projectID,w.id);
+                let tblRow:TableSetup.ITableItem[] = TableSetup.CollectPageRows(pgList);
 
+                s.pageTableRows = tblRow;
+                this.setState(s);
             }
         }
         catch(ex)
@@ -82,37 +91,6 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
     }
         
 
-    private async FindProjectWiki(projectID:string):Promise<WikiV2>
-    {
-        return new Promise<WikiV2>(async (resolve,reject) => {
-            let wClient = await this.GetWikiAPIClient();
-            let thisProjectWiki:WikiV2;
-            let success:boolean = false;
-            if(wClient)
-            {
-                let wikiList:WikiV2[] = await wClient.getAllWikis(projectID);
-                if(wikiList)
-                {
-                    if(wikiList.length >0)
-                    {
-                        wikiList.forEach((w)=> {
-                            if(w.projectId == projectID)
-                            {
-                                console.log("found a wiki");
-                                thisProjectWiki = w;
-                                success =true;
-                                resolve(thisProjectWiki);  
-                            }
-                        });
-                    }
-                }
-            }
-            if(!success)
-            { 
-                reject("no project wiki found")
-            }
-        });
-    }
 
     ///Toast Error
     private async toastError(toastText:string)
@@ -130,7 +108,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
     {
         return new Promise<GitRestClient>(async (resolve,reject) => {
             try {
-                let c:GitRestClient = API.getClient(GitRestClient);
+                let c:GitRestClient = API.getClient(GitRestClient ,);
                 resolve(c);
             }
             catch(ex)
@@ -150,7 +128,22 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
             }
             catch(ex)
             {
-                this.toastError("Error while attempting to get Git Client");
+                this.toastError("Error while attempting to get Wiki Client");
+                reject(ex); 
+            }
+        });
+    }
+
+    public async GetBatchWikiAPIClient():Promise<WikiPageBatchClient>
+    {
+        return new Promise<WikiPageBatchClient>(async (resolve,reject) => {
+            try {
+                let c:WikiPageBatchClient = API.getClient(WikiPageBatchClient, {});
+                resolve(c);
+            }
+            catch(ex)
+            {
+                this.toastError("Error while attempting to get Wiki Batch Client");
                 reject(ex); 
             }
         });
@@ -160,8 +153,17 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
     public render(): JSX.Element {
 
-        let projectName = this.state.projectName
-        let wikiName = this.state.projectWikiName
+        let projectName = this.state.projectName;
+        let wikiName = this.state.projectWikiName;
+        
+
+        let tableItemsNoIcons = new ArrayItemProvider<TableSetup.ITableItem>(
+            this.state.pageTableRows.map((item: TableSetup.ITableItem) => {
+                const newItem = Object.assign({}, item);
+                //newItem.name = { text: newItem.name.text };
+                return newItem;
+            })
+        );
         return (
             <Page className="sample-hub flex-grow">
                 <div>Hello World  - {projectName}</div>             
@@ -172,6 +174,16 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                     <br></br>
                     WikiRepoID - {this.state.projectWikiRepoID}
                 </div> 
+                <br></br>
+                <Table
+                    ariaLabel="Work Item Table"
+                    columns={TableSetup.wikiPageColumns}
+                    itemProvider={tableItemsNoIcons}
+                    role="table"
+                    className="wiTable"
+                    containerClassName="v-scroll-auto">
+
+                </Table>
             </Page>
         );
     }
