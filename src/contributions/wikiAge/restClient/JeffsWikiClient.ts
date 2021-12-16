@@ -1,5 +1,6 @@
 import { RestClientBase } from "./RestClientBase";
 import { IVssRestClientOptions } from "./Context";
+import {VersionControlRecursionType} from "azure-devops-extension-api/Git";
 
 export interface IGetWikiPageBatchRequest {
     continuationToken:string,
@@ -10,6 +11,18 @@ export interface IGetWikiPageBatchRequest {
 export interface WikiPagesBatchResult {
     path:string;
     id:number;
+}
+
+export interface WikiPageVJSP {
+    path:string;
+    order:number;
+    isParentPage:boolean;
+    gitItemPath: string;
+    subPages: any[];
+    url: string;
+    remoteUrl: string;
+    id: number;
+    content: any;
 }
 
 export class WikiPageBatchClient extends RestClientBase {
@@ -42,6 +55,33 @@ export class WikiPageBatchClient extends RestClientBase {
                 wikiIdentifier: wikiIdentifier
             },
             body: req
+        });
+    }
+
+
+    public async getPageById(
+        project: string,
+        wikiIdentifier: string,
+        id: number,
+        recursionLevel?: VersionControlRecursionType,
+        includeContent?: boolean
+        ): Promise<WikiPageVJSP> {
+
+        const queryValues: any = {
+            recursionLevel: recursionLevel,
+            includeContent: includeContent
+        };
+
+        return this.beginRequest<WikiPageVJSP>({
+            apiVersion: "5.2-preview.1",
+            httpResponseType: "application/json",
+            routeTemplate: "{project}/_apis/wiki/wikis/{wikiIdentifier}/pages/{id}",
+            routeValues: {
+                project: project,
+                wikiIdentifier: wikiIdentifier,
+                id: id
+            },
+            queryParams: queryValues
         });
     }
 }

@@ -1,8 +1,10 @@
 import {WikiRestClient, WikiV2} from "azure-devops-extension-api/Wiki";
-import {WikiPageBatchClient, WikiPagesBatchResult} from './restClient/JeffsWikiClient';
+import {WikiPageBatchClient, WikiPagesBatchResult, WikiPageVJSP} from './restClient/JeffsWikiClient';
+import {VersionControlRecursionType} from "azure-devops-extension-api/Git";
 import * as SDK from "azure-devops-extension-sdk";
 import * as API from "azure-devops-extension-api";
 import { CommonServiceIds, IProjectPageService,IGlobalMessagesService, getClient, IProjectInfo } from "azure-devops-extension-api";
+import { deserializeVssJsonObject } from "./restClient/Util/Serialization";
 
 
 export async function FindProjectWiki(wClient:WikiRestClient, projectID:string):Promise<WikiV2>
@@ -33,6 +35,30 @@ export async function FindProjectWiki(wClient:WikiRestClient, projectID:string):
         if(!success)
         { 
             reject("no project wiki found")
+        }
+    });
+}
+
+
+export async function GetPageDetails(wClient:WikiPageBatchClient, projectID:string, wikiID:string, pageList:WikiPagesBatchResult[]):Promise<WikiPageVJSP[]>
+{
+    let pagePromises:Promise<WikiPageVJSP>[] = [];    
+
+    
+    return new Promise<WikiPageVJSP[]>(async (resolve,reject) => {    
+        pageList.forEach(currentPage => {
+            let p:Promise<WikiPageVJSP> = wClient.getPageById(projectID,wikiID,currentPage.id,VersionControlRecursionType.None,false);
+            pagePromises.push(p);
+        });  //end foreach
+    
+        try 
+        {
+            let pageDetails:WikiPageVJSP[] = await Promise.all(pagePromises);    
+            resolve(pageDetails);
+        }
+        catch(ex)
+        {
+            reject("Error while retrieving all page Details " + JSON.stringify(ex));
         }
     });
 }
