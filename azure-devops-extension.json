@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "wikiAge",
     "publisher": "OneLuckiDev",
-    "version": "0.0.88",
+    "version": "0.0.89",
     "name": "Wiki Age Report",
     "description": "Get insight in to potentially stale and out of date documentation",
     "public": false,
@@ -79,7 +79,7 @@
             "uri": "https://github.com/jeffpriz/ado-wiki-age-report"
         },
         "build": {
-            "uri":"https://dev.azure.com/oneluckidev/OneLuckiDev/_apis/build/status/jeffpriz.ado-wait-work-time?branchName=main"
+            "uri":"https://dev.azure.com/oneluckidev/OneLuckiDev/_apis/build/status/jeffpriz.ado-wiki-age-report?branchName=main"
         }
     },
     "repository": {
