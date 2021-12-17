@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "wikiAge",
     "publisher": "OneLuckiDev",
-    "version": "0.0.71",
+    "version": "0.0.86",
     "name": "Wiki Age",
     "description": "Get insight in to potentially stale and out of date documentation",
     "public": false,
@@ -52,7 +52,8 @@
                 "ms.vss-web.home-hub-group"
             ],
             "properties": {
-                "name": "Wiki Age",
+                "name": "Wiki Age Report",
+                "icon": "asset://static/barIcon.png",
                 "order": 25,                
                 "uri": "dist/wikiAge/context.html"
             }

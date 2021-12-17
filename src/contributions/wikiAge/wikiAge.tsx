@@ -321,7 +321,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                     <Header title={projectNameTitle} titleSize={TitleSize.Medium} />
 
                     <Table
-                        ariaLabel="Work Item Table"
+                        ariaLabel="Wiki Page Table"
                         columns={TableSetup.wikiPageColumns}
                         itemProvider={tableItemsNoIcons}
                         role="table"

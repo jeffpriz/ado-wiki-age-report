@@ -155,7 +155,28 @@
     width: 100%;
 }
 
+.linkText 
+{
+    font-size:smaller;
+}
+.tableText
+{
+    font-size:smaller;
+}
 .wiTable
 {
-    padding-top: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-size: smaller;
+}
+.cell-row-center
+{
+    text-align: center;
+    align-content: center;
+}
+.days-column
+{
+    font-size:smaller;
+    text-align: center;
+    width:150px;
 }

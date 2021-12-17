@@ -4,6 +4,7 @@ import { ISimpleListCell } from "azure-devops-ui/List";
 import { MenuItemType } from "azure-devops-ui/Menu";
 import { IStatusProps, Status, Statuses, StatusSize } from "azure-devops-ui/Status";
 import {WikiPagesBatchResult} from './restClient/JeffsWikiClient';
+
 import {
     ColumnMore,
     ColumnSelect,
@@ -20,31 +21,37 @@ import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 
 export const wikiPageColumns = [
     {
+        id: "statusCol",        
+        readonly: true,
+        renderCell: renderStatus,
+        width: new ObservableValue(-6),
+    },
+    {
         id: "pagePath",
         name: "Page Path",
         readonly: true,
         renderCell: RenderIDLink,
-        width: new ObservableValue(-85),
+        width: new ObservableValue(-95),
     },
     {
         id: "daysOld",
         name: "Days Since Update",
         readonly: true,
-        renderCell: renderSimpleCell,
-        width: new ObservableValue(-20),
+        renderCell: RenderDaysCount,
+        width: new ObservableValue(-25),
     },    
     {
         id: "updateTimestamp",
         name: "Updated On",
         readonly: true,
-        renderCell: renderSimpleCell,
-        width: new ObservableValue(-55),
+        renderCell: RenderTimestamp,
+        width: new ObservableValue(-65),
     },
     {
         id: "updatedBy",
         name: "Updated By",
         readonly: true,
-        renderCell: renderSimpleCell,
+        renderCell: RenderName,
         width: new ObservableValue(-55),
     },
 ]
@@ -79,19 +86,87 @@ export function CollectPageRows(pageList:WikiPagesBatchResult[]):PageTableItem[]
 }
 
 export function RenderIDLink(
+rowIndex: number,
+columnIndex: number,
+tableColumn: ITableColumn<PageTableItem>,
+tableItem: PageTableItem
+): JSX.Element
+{
+const { pagePath,  pageURL} = tableItem;
+return (
+
+    <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+        <Link subtle={false} className="linkText"  excludeTabStop href={pageURL} target="_blank" tooltipProps={{ text: pagePath }}>
+            {pagePath}
+        </Link>
+    </SimpleTableCell>
+);
+}
+export function renderStatus(
     rowIndex: number,
     columnIndex: number,
     tableColumn: ITableColumn<PageTableItem>,
     tableItem: PageTableItem
-): JSX.Element
-{
-    const { pagePath,  pageURL} = tableItem;
+    ): JSX.Element
+    {
+    const { daysOld} = tableItem;
     return (
-
+    
         <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
-            <Link subtle={false} excludeTabStop href={pageURL} target="_blank" tooltipProps={{ text: pagePath }}>
-                {pagePath}
-            </Link>
+        <Status
+            {...getStatusIndicatorData(daysOld, 90).statusProps}
+            className="icon-large-margin"
+            size={StatusSize.s}
+        />
+        </SimpleTableCell>
+
+    );
+}
+
+
+export function RenderDaysCount(
+    rowIndex: number,
+    columnIndex: number,
+    tableColumn: ITableColumn<PageTableItem>,
+    tableItem: PageTableItem
+    ): JSX.Element
+    {
+    const { daysOld} = tableItem;
+    return (
+    
+        <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden cell-row-center">
+            <span className="days-column">{daysOld}</span>
+        </SimpleTableCell>
+    );
+}
+export function RenderTimestamp(
+    rowIndex: number,
+    columnIndex: number,
+    tableColumn: ITableColumn<PageTableItem>,
+    tableItem: PageTableItem
+    ): JSX.Element
+    {
+    const { updateTimestamp} = tableItem;
+    return (
+    
+        <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+            <span className="tableText">{updateTimestamp}</span>
+        </SimpleTableCell>
+    );
+}
+
+export function RenderName(
+    rowIndex: number,
+    columnIndex: number,
+    tableColumn: ITableColumn<PageTableItem>,
+    tableItem: PageTableItem
+    ): JSX.Element
+    {
+    const { updatedBy} = tableItem;
+    return (
+    
+        <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+            <span className="tableText">{updatedBy}</span>
         </SimpleTableCell>
     );
 }
@@ -102,3 +177,30 @@ export function dateSort(a:PageTableItem, b:PageTableItem) {
     if(a.updateDateMili > b.updateDateMili) {return 1;}
     return 0;
   }
+
+
+  export interface IStatusIndicatorData {
+    statusProps: IStatusProps;
+    label: string;
+}
+
+  export function getStatusIndicatorData(daysOld: number, threshhold:number): IStatusIndicatorData {
+    
+    
+    const indicatorData: IStatusIndicatorData = {
+        label: "Success",
+        statusProps: { ...Statuses.Success, ariaLabel: "Success" },
+    };
+
+    if(daysOld > threshhold )
+    {            
+        indicatorData.statusProps = { ...Statuses.Failed, ariaLabel: "Failed" };
+        indicatorData.label = "Failed";
+    }
+    else if (daysOld > threshhold - 7)
+    {
+        indicatorData.statusProps = { ...Statuses.Warning, ariaLabel: "Warning" };
+        indicatorData.label = "Warning";
+    }
+    return indicatorData;
+}
