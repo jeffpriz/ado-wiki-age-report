@@ -2,10 +2,10 @@
     "manifestVersion": 1,
     "id": "wikiAge",
     "publisher": "OneLuckiDev",
-    "version": "0.0.89",
+    "version": "1.0.1",
     "name": "Wiki Age Report",
     "description": "Get insight in to potentially stale and out of date documentation",
-    "public": false,
+    "public": true,
     "categories": [
         "Azure Repos"
     ],

@@ -13,6 +13,10 @@ import { Table } from "azure-devops-ui/Table";
 import { Header, TitleSize } from "azure-devops-ui/Header";
 import { Spinner, SpinnerSize } from "azure-devops-ui/Spinner";
 import { Card } from "azure-devops-ui/Card";
+import { FormItem } from "azure-devops-ui/FormItem";
+import {Dropdown} from "azure-devops-ui/Dropdown";
+import { IListBoxItem} from "azure-devops-ui/ListBox";
+
 
 import {WikiRestClient, WikiV2} from "azure-devops-extension-api/Wiki";
 import * as GetWiki from "./GetWiki"
@@ -30,9 +34,19 @@ interface IWikiAgeState {
     projectWikiRepoID:string;
     pageTableRows:TableSetup.PageTableItem[];
     doneLoading:boolean;
+    daysThreshold:number;
 }
 
+
+
 class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
+    private dateSelectionChoices = [        
+        { text: "Updated in 90 Days", id: "90" },        
+        { text: "Updated in 120 Days", id: "120" },
+        { text: "Updated in last 1 Year", id: "365" },        
+        { text: "Updated in last 2 Years", id: "730" },
+    ];
+
 
     constructor(props:{}) {
         super(props);
@@ -45,7 +59,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
     public initEmptyState():IWikiAgeState
     {
-        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[],doneLoading:false};
+        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[],doneLoading:false,daysThreshold:90};
         return initState;
     }
 
@@ -80,8 +94,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
             let bclient = await this.GetBatchWikiAPIClient();            
             if(w)
             {   
-                s.projectWikiID = w.id;
-                console.log(w.id);
+                s.projectWikiID = w.id;                
                 s.projectWikiName = w.name;
                 s.projectWikiRepoID = w.repositoryId;
 
@@ -103,7 +116,9 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                 }
 
                 tblRow = tblRow.sort(TableSetup.dateSort);
+                this.SetTableRowsDaysThreshold(tblRow, s.daysThreshold);
                 s.pageTableRows = tblRow;
+
                 s.doneLoading=true;
                 this.setState(s);
             }
@@ -168,6 +183,20 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
     }
 
 
+    private SetTableRowsDaysThreshold(tableRows:TableSetup.PageTableItem[], threshold:number)
+    {
+        let ndx:number = 0;
+
+        if(tableRows.length > 0)
+        {
+            do {
+                tableRows[ndx].daysThreshold = threshold;
+                ndx++;
+            } while(ndx < tableRows.length)
+        }
+    }
+
+
     private async MergeGitDetails(tableRows:TableSetup.PageTableItem[], gitDetails:GitItem[])
     {
         let ndx:number = 0;
@@ -187,6 +216,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                     let timeDiffMili:number = currentDate.valueOf() - detail.latestProcessedChange.committer.date.valueOf();
                     let TimeDiffDuration:TimeCalc.IDuration = TimeCalc.getMillisecondsToTime(timeDiffMili);
                     tableRows[ndx].daysOld = TimeDiffDuration.days;
+
                 }    
                 ndx++;
             } while(ndx < tableRows.length)
@@ -297,11 +327,27 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
         });
     }
 
+    //Day drop down select
+    private SelectDays = (event: React.SyntheticEvent<HTMLElement>, item: IListBoxItem<{}>) => {
 
+        let d:number = Number.parseInt(item.id);
+
+        this.DoDateSelect(d);
+    };
+
+    private DoDateSelect(daysNumber:number)
+    {
+        let currentState:IWikiAgeState = this.state;
+        currentState.daysThreshold = daysNumber;
+        this.SetTableRowsDaysThreshold(currentState.pageTableRows, daysNumber);
+
+        this.setState(currentState);
+
+    }
 
     public render(): JSX.Element {
 
-        let projectNameTitle = "Project: " + this.state.projectName;
+        let projectNameTitle:string = "Project: " + this.state.projectName;
         let wikiName = this.state.projectWikiName;
         let doneLoading:boolean = this.state.doneLoading;
 
@@ -317,9 +363,15 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
         {
             return (
                 <Page className="sample-hub flex-grow">
+                    
+                    <Card className="selectionCard flex-row" >     
                     <Header title="Wiki Age Report" titleSize={TitleSize.Large} />
-                    <Header title={projectNameTitle} titleSize={TitleSize.Medium} />
-
+                    <div className="flex-cell" style={{ flexWrap: "wrap", textAlign:"left", minWidth:"425px", minHeight:""}}>
+                        <FormItem className="daysDropDownFF" label="Age To Be Considered Old: " message="Select the time that you want to be highlighted as Old">
+                                <Dropdown items={this.dateSelectionChoices} placeholder="Select How old is old" ariaLabel="Basic" className="daysDropDown" onSelect={this.SelectDays} /> 
+                        </FormItem>
+                        </div>
+                    </Card>
                     <Table
                         ariaLabel="Wiki Page Table"
                         columns={TableSetup.wikiPageColumns}
