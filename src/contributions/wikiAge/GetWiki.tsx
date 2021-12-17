@@ -1,10 +1,6 @@
 import {WikiRestClient, WikiV2} from "azure-devops-extension-api/Wiki";
 import {WikiPageBatchClient, WikiPagesBatchResult, WikiPageVJSP} from './restClient/JeffsWikiClient';
 import {VersionControlRecursionType} from "azure-devops-extension-api/Git";
-import * as SDK from "azure-devops-extension-sdk";
-import * as API from "azure-devops-extension-api";
-import { CommonServiceIds, IProjectPageService,IGlobalMessagesService, getClient, IProjectInfo } from "azure-devops-extension-api";
-import { deserializeVssJsonObject } from "./restClient/Util/Serialization";
 
 
 export async function FindProjectWiki(wClient:WikiRestClient, projectID:string):Promise<WikiV2>
@@ -22,8 +18,7 @@ export async function FindProjectWiki(wClient:WikiRestClient, projectID:string):
                 {
                     wikiList.forEach((w)=> {
                         if(w.projectId == projectID)
-                        {
-                            console.log("found a wiki");
+                        {                            
                             thisProjectWiki = w;
                             success =true;
                             resolve(thisProjectWiki);  

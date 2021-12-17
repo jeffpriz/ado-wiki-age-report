@@ -1,23 +1,13 @@
 import * as React from "react";
 import { ObservableValue } from "azure-devops-ui/Core/Observable";
-import { ISimpleListCell } from "azure-devops-ui/List";
-import { MenuItemType } from "azure-devops-ui/Menu";
 import { IStatusProps, Status, Statuses, StatusSize } from "azure-devops-ui/Status";
 import {WikiPagesBatchResult} from './restClient/JeffsWikiClient';
-
-import {
-    ColumnMore,
-    ColumnSelect,
-    ISimpleTableCell,
-    renderSimpleCell,
-    TableColumnLayout,
+import {    
+    ISimpleTableCell,    
     ITableColumn,
     SimpleTableCell
 } from "azure-devops-ui/Table";
 import { Link } from "azure-devops-ui/Link";
-import { css } from "azure-devops-ui/Util";
-import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
-
 
 export const wikiPageColumns = [
     {
@@ -66,23 +56,20 @@ export interface PageTableItem extends ISimpleTableCell {
     updateDateMili:number;
     updatedBy:string;
     daysOld:number;
+    daysThreshold:number;
 }
 
 
 export function CollectPageRows(pageList:WikiPagesBatchResult[]):PageTableItem[]
 {
-
     let result:PageTableItem[] = [];
     pageList.forEach(thisPage => {
 
-        let newPage:PageTableItem = {pageID:thisPage.id.toString(), pagePath:thisPage.path, fileName:"", gitItemPath:"", pageURL:"", updateTimestamp: "", updatedBy:"", daysOld:-1, updateDateMili:-1};        
+        let newPage:PageTableItem = {pageID:thisPage.id.toString(), pagePath:thisPage.path, fileName:"", gitItemPath:"", pageURL:"", updateTimestamp: "", updatedBy:"", daysOld:-1, updateDateMili:-1, daysThreshold:90};        
         
         result.push(newPage);
     });
-
-    console.log("TOTAL " + result.length.toString() + " page rows");
     return result;
-
 }
 
 export function RenderIDLink(
@@ -109,12 +96,12 @@ export function renderStatus(
     tableItem: PageTableItem
     ): JSX.Element
     {
-    const { daysOld} = tableItem;
+    const { daysOld, daysThreshold} = tableItem;
     return (
     
         <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
         <Status
-            {...getStatusIndicatorData(daysOld, 90).statusProps}
+            {...getStatusIndicatorData(daysOld, daysThreshold).statusProps}
             className="icon-large-margin"
             size={StatusSize.s}
         />
