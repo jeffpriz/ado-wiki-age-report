@@ -20,26 +20,33 @@ import { ArrayItemProvider } from "azure-devops-ui/Utilities/Provider";
 
 export const wikiPageColumns = [
     {
-        id: "pageID",
-        name: "Page ID",
-        readonly: true,
-        renderCell: renderSimpleCell,
-        width: new ObservableValue(-15),
-    },
-    {
         id: "pagePath",
         name: "Page Path",
         readonly: true,
         renderCell: RenderIDLink,
-        width: new ObservableValue(-55),
+        width: new ObservableValue(-85),
     },
     {
-        id: "fileName",
-        name: "File",
+        id: "daysOld",
+        name: "Days Since Update",
+        readonly: true,
+        renderCell: renderSimpleCell,
+        width: new ObservableValue(-20),
+    },    
+    {
+        id: "updateTimestamp",
+        name: "Updated On",
         readonly: true,
         renderCell: renderSimpleCell,
         width: new ObservableValue(-55),
-    }
+    },
+    {
+        id: "updatedBy",
+        name: "Updated By",
+        readonly: true,
+        renderCell: renderSimpleCell,
+        width: new ObservableValue(-55),
+    },
 ]
 
 export interface PageTableItem extends ISimpleTableCell {
@@ -48,6 +55,10 @@ export interface PageTableItem extends ISimpleTableCell {
     fileName: string;
     gitItemPath:string;
     pageURL:string;
+    updateTimestamp:string;
+    updateDateMili:number;
+    updatedBy:string;
+    daysOld:number;
 }
 
 
@@ -57,7 +68,7 @@ export function CollectPageRows(pageList:WikiPagesBatchResult[]):PageTableItem[]
     let result:PageTableItem[] = [];
     pageList.forEach(thisPage => {
 
-        let newPage:PageTableItem = {pageID:thisPage.id.toString(), pagePath:thisPage.path, fileName:"", gitItemPath:"", pageURL:""};        
+        let newPage:PageTableItem = {pageID:thisPage.id.toString(), pagePath:thisPage.path, fileName:"", gitItemPath:"", pageURL:"", updateTimestamp: "", updatedBy:"", daysOld:-1, updateDateMili:-1};        
         
         result.push(newPage);
     });
@@ -78,9 +89,16 @@ export function RenderIDLink(
     return (
 
         <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
-            <Link subtle={false} excludeTabStop href={pageURL} target="_blank">
+            <Link subtle={false} excludeTabStop href={pageURL} target="_blank" tooltipProps={{ text: pagePath }}>
                 {pagePath}
             </Link>
         </SimpleTableCell>
     );
 }
+
+export function dateSort(a:PageTableItem, b:PageTableItem) {
+
+    if(a.updateDateMili < b.updateDateMili) {return -1;}
+    if(a.updateDateMili > b.updateDateMili) {return 1;}
+    return 0;
+  }

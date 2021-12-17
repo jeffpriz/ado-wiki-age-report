@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "wikiAge",
     "publisher": "OneLuckiDev",
-    "version": "0.0.50",
+    "version": "0.0.71",
     "name": "Wiki Age",
     "description": "Get insight in to potentially stale and out of date documentation",
     "public": false,
