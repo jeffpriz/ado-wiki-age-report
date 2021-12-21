@@ -16,7 +16,7 @@ import { Card } from "azure-devops-ui/Card";
 import { FormItem } from "azure-devops-ui/FormItem";
 import {Dropdown} from "azure-devops-ui/Dropdown";
 import { IListBoxItem} from "azure-devops-ui/ListBox";
-
+import { ZeroData } from "azure-devops-ui/ZeroData";
 
 import {WikiRestClient, WikiV2} from "azure-devops-extension-api/Wiki";
 import * as GetWiki from "./GetWiki"
@@ -35,6 +35,7 @@ interface IWikiAgeState {
     pageTableRows:TableSetup.PageTableItem[];
     doneLoading:boolean;
     daysThreshold:number;
+    emptyWiki:boolean
 }
 
 
@@ -59,7 +60,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
     public initEmptyState():IWikiAgeState
     {
-        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[],doneLoading:false,daysThreshold:90};
+        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[],doneLoading:false,daysThreshold:90, emptyWiki:true};
         return initState;
     }
 
@@ -97,27 +98,54 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                 s.projectWikiID = w.id;                
                 s.projectWikiName = w.name;
                 s.projectWikiRepoID = w.repositoryId;
-
-                let pgList:WikiPagesBatchResult[] = await GetWiki.GetWikiPages(bclient,s.projectID,w.id);
-                let tblRow:TableSetup.PageTableItem[] = TableSetup.CollectPageRows(pgList);
-
                 
-                let pageDetail:WikiPageVJSP[] = await GetWiki.GetPageDetails(bclient,s.projectID,w.id,pgList);
-                
-                await this.MergePageDetails(tblRow, pageDetail);
-                
+                let pgList:WikiPagesBatchResult[] = []
                 try {
-                    let gitDetails:GitItem[] = await this.GetGitDetailsForPages(tblRow, w.repositoryId, s.projectID);
-                    await this.MergeGitDetails(tblRow,gitDetails);
+                    try 
+                    {
+                        pgList = await GetWiki.GetWikiPages(bclient,s.projectID,w.id);
+                    }
+                    catch(getEx)
+                    {
+                        
+                        if(getEx)
+                        {
+                            if(JSON.stringify(getEx) != "{}")
+                            {
+                                this.toastError("Error Retrieving Wiki Page List: " +  JSON.stringify(getEx));
+                            }
+                        }
+
+                    }
+                    
+                    let tblRow:TableSetup.PageTableItem[] = TableSetup.CollectPageRows(pgList);
+
+                    
+                    let pageDetail:WikiPageVJSP[] = await GetWiki.GetPageDetails(bclient,s.projectID,w.id,pgList);
+                    
+                    await this.MergePageDetails(tblRow, pageDetail);
+                    
+                    try {
+                        let gitDetails:GitItem[] = await this.GetGitDetailsForPages(tblRow, w.repositoryId, s.projectID);
+                        await this.MergeGitDetails(tblRow,gitDetails);
+                    }
+                    catch(ex)
+                    {
+                        this.toastError("git failed");
+                    }
+
+                    if(tblRow.length > 0)
+                    {
+                        s.emptyWiki=false;
+                    }
+                    tblRow = tblRow.sort(TableSetup.dateSort);
+                    this.SetTableRowsDaysThreshold(tblRow, s.daysThreshold);
+                    s.pageTableRows = tblRow;
                 }
                 catch(ex)
                 {
-                    this.toastError("git failed");
+                    this.toastError("During Work : " + JSON.stringify(ex))
                 }
-
-                tblRow = tblRow.sort(TableSetup.dateSort);
-                this.SetTableRowsDaysThreshold(tblRow, s.daysThreshold);
-                s.pageTableRows = tblRow;
 
                 s.doneLoading=true;
                 this.setState(s);
@@ -350,6 +378,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
         let projectNameTitle:string = "Project: " + this.state.projectName;
         let wikiName = this.state.projectWikiName;
         let doneLoading:boolean = this.state.doneLoading;
+        let failedFindingWikiPages:boolean = this.state.emptyWiki;
 
         let tableItemsNoIcons = new ArrayItemProvider<TableSetup.PageTableItem>(
             this.state.pageTableRows.map((item: TableSetup.PageTableItem) => {
@@ -361,28 +390,65 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
         if(doneLoading)
         {
-            return (
-                <Page className="sample-hub flex-grow">
-                    
-                    <Card className="selectionCard flex-row" >     
-                    <Header title="Wiki Age Report" titleSize={TitleSize.Large} />
-                    <div className="flex-cell" style={{ flexWrap: "wrap", textAlign:"left", minWidth:"425px", minHeight:""}}>
-                        <FormItem className="daysDropDownFF" label="Age To Be Considered Old: " message="Select the time that you want to be highlighted as Old">
-                                <Dropdown items={this.dateSelectionChoices} placeholder="Select How old is old" ariaLabel="Basic" className="daysDropDown" onSelect={this.SelectDays} /> 
-                        </FormItem>
-                        </div>
-                    </Card>
-                    <Table
-                        ariaLabel="Wiki Page Table"
-                        columns={TableSetup.wikiPageColumns}
-                        itemProvider={tableItemsNoIcons}
-                        role="table"
-                        className="wiTable"
-                        containerClassName="v-scroll-auto">
-
-                    </Table>
+            if(failedFindingWikiPages)
+            {
+                return (<Page className="sample-hub flex-grow">
+                        
+                <Card className="selectionCard flex-row" >     
+                <Header title="Wiki Age Report" titleSize={TitleSize.Large} />
+                </Card>
+                <ZeroData
+                    primaryText="No Wiki Pages found in this project's Wiki"
+                    secondaryText={
+                        <span>
+                           This report is designed to give you information about the wiki Pages in your project's wiki.  It will give you data when we are able to successfully find pages in you Wiki.
+                        </span>
+                    }
+                    imageAltText="WikiAge"
+                    imagePath={"./wikiAgeIcon.png"}
+                    />
+                
                 </Page>
-            );
+                );
+            }
+            else 
+            {
+                return (
+                    <Page className="sample-hub flex-grow">
+                        
+                        <Card className="selectionCard flex-row" >     
+                        <table style={{ textAlign:"left", minWidth:"650px", minHeight:""}}>
+                            <tr>
+                                <td style={{ minWidth:"200px"}}>
+                                <Header title="Wiki Age Report" titleSize={TitleSize.Large} />
+                                </td>
+                                <td>
+                                    <table>
+                                        <tr>
+                                            <td ><Header title="Age To Be Considered Old: " className="selectPrompt" titleSize={TitleSize.Small} /></td>
+                                            <td><Dropdown items={this.dateSelectionChoices} placeholder="Select How old is old" ariaLabel="Basic" className="daysDropDown" onSelect={this.SelectDays} /> </td>
+                                        </tr>
+                                    </table>
+                                    
+                                </td>
+                                <td>
+
+                                </td>
+                            </tr>
+                        </table>
+                        </Card>
+                        <Table
+                            ariaLabel="Wiki Page Table"
+                            columns={TableSetup.wikiPageColumns}
+                            itemProvider={tableItemsNoIcons}
+                            role="table"
+                            className="wiTable"
+                            containerClassName="v-scroll-auto">
+
+                        </Table>
+                    </Page>
+                );
+            }
         }
         else {
             return(                      

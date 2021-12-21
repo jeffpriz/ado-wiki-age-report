@@ -84,7 +84,7 @@ export async function GetWikiPages(wClient:WikiPageBatchClient, projectID:string
         }
         catch(ex)
         {
-            reject("Failed getting the pages list" +  JSON.stringify(ex));
+            reject(ex);
         }
     });
 }
