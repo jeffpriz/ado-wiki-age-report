@@ -15,6 +15,7 @@ import { Spinner, SpinnerSize } from "azure-devops-ui/Spinner";
 import { Card } from "azure-devops-ui/Card";
 import { FormItem } from "azure-devops-ui/FormItem";
 import {Dropdown} from "azure-devops-ui/Dropdown";
+import { DropdownSelection } from "azure-devops-ui/Utilities/DropdownSelection";
 import { IListBoxItem} from "azure-devops-ui/ListBox";
 import { ZeroData } from "azure-devops-ui/ZeroData";
 
@@ -38,24 +39,30 @@ interface IWikiAgeState {
     daysThreshold:number;
     emptyWiki:boolean;
     renderOwners:boolean;
+    
 }
 
 
 
 class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
     private dateSelectionChoices = [        
+        { text: "Updated in 30 Days", id: "30" },        
+        { text: "Updated in 60 Days", id: "60" },        
         { text: "Updated in 90 Days", id: "90" },        
         { text: "Updated in 120 Days", id: "120" },
+        { text: "Updated in 180 Days", id: "180" },        
         { text: "Updated in last 1 Year", id: "365" },        
         { text: "Updated in last 2 Years", id: "730" },
     ];
 
+    private defaultDateSelection:DropdownSelection;
 
     constructor(props:{}) {
         super(props);
         
         let initState:IWikiAgeState = this.initEmptyState();
-        
+        this.defaultDateSelection = new DropdownSelection();
+        this.defaultDateSelection.select(2);
         this.state = initState;
 
     }
@@ -489,7 +496,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                                     <table>
                                         <tr>
                                             <td ><Header title="Age To Be Considered Old: " className="selectPrompt" titleSize={TitleSize.Small} /></td>
-                                            <td><Dropdown items={this.dateSelectionChoices} placeholder="Select How old is old" ariaLabel="Basic" className="daysDropDown" onSelect={this.SelectDays} /> </td>
+                                            <td><Dropdown items={this.dateSelectionChoices} placeholder="Select How old is old" ariaLabel="Basic" className="daysDropDown" onSelect={this.SelectDays} selection={this.defaultDateSelection} /> </td>
                                         </tr>
                                     </table>
                                     
