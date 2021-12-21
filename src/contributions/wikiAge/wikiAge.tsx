@@ -401,7 +401,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                     primaryText="No Wiki Pages found in this project's Wiki"
                     secondaryText={
                         <span>
-                           This report is designed to give you information about the wiki Pages in your project's wiki.  It will give you data when we are able to successfully find pages in you Wiki.
+                           This report is designed to give you information about the wiki Pages in your project's wiki.  It will give you data when we are able to successfully find pages in this project's Wiki.
                         </span>
                     }
                     imageAltText="WikiAge"
