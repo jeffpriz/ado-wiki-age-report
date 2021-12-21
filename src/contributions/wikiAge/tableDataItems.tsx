@@ -21,7 +21,7 @@ export const wikiPageColumns = [
         name: "Page Path",
         readonly: true,
         renderCell: RenderIDLink,
-        width: new ObservableValue(-95),
+        width: new ObservableValue(-125),
     },
     {
         id: "daysOld",
@@ -35,14 +35,58 @@ export const wikiPageColumns = [
         name: "Updated On",
         readonly: true,
         renderCell: RenderTimestamp,
-        width: new ObservableValue(-65),
+        width: new ObservableValue(-45),
     },
     {
         id: "updatedBy",
         name: "Updated By",
         readonly: true,
         renderCell: RenderName,
-        width: new ObservableValue(-55),
+        width: new ObservableValue(-35),
+    },
+]
+
+export const wikiPageColumnsWitOwner = [
+    {
+        id: "statusCol",        
+        readonly: true,
+        renderCell: renderStatus,
+        width: new ObservableValue(-6),
+    },
+    {
+        id: "pagePath",
+        name: "Page Path",
+        readonly: true,
+        renderCell: RenderIDLink,
+        width: new ObservableValue(-120),
+    },
+    {
+        id: "daysOld",
+        name: "Days Since Update",
+        readonly: true,
+        renderCell: RenderDaysCount,
+        width: new ObservableValue(-25),
+    },    
+    {
+        id: "updateTimestamp",
+        name: "Updated On",
+        readonly: true,
+        renderCell: RenderTimestamp,
+        width: new ObservableValue(-45),
+    },
+    {
+        id: "updatedBy",
+        name: "Updated By",
+        readonly: true,
+        renderCell: RenderName,
+        width: new ObservableValue(-30),
+    },
+    {
+        id: "pageOwner",
+        name: "Page Owner",
+        readonly: true,
+        renderCell: RenderOwner,
+        width: new ObservableValue(-30),
     },
 ]
 
@@ -55,6 +99,7 @@ export interface PageTableItem extends ISimpleTableCell {
     updateTimestamp:string;
     updateDateMili:number;
     updatedBy:string;
+    pageOwner:string;
     daysOld:number;
     daysThreshold:number;
 }
@@ -65,7 +110,7 @@ export function CollectPageRows(pageList:WikiPagesBatchResult[]):PageTableItem[]
     let result:PageTableItem[] = [];
     pageList.forEach(thisPage => {
 
-        let newPage:PageTableItem = {pageID:thisPage.id.toString(), pagePath:thisPage.path, fileName:"", gitItemPath:"", pageURL:"", updateTimestamp: "", updatedBy:"", daysOld:-1, updateDateMili:-1, daysThreshold:90};        
+        let newPage:PageTableItem = {pageID:thisPage.id.toString(), pagePath:thisPage.path, fileName:"", gitItemPath:"", pageURL:"", updateTimestamp: "", updatedBy:"", daysOld:-1, updateDateMili:-1, daysThreshold:90, pageOwner:""};        
         
         result.push(newPage);
     });
@@ -154,6 +199,22 @@ export function RenderName(
     
         <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
             <span className="tableText">{updatedBy}</span>
+        </SimpleTableCell>
+    );
+}
+
+export function RenderOwner(
+    rowIndex: number,
+    columnIndex: number,
+    tableColumn: ITableColumn<PageTableItem>,
+    tableItem: PageTableItem
+    ): JSX.Element
+    {
+    const { pageOwner} = tableItem;
+    return (
+    
+        <SimpleTableCell columnIndex={columnIndex} tableColumn={tableColumn} key={"col-" + columnIndex} contentClassName="fontWeightSemiBold font-weight-semibold fontSizeM font-size-m scroll-hidden">
+            <span className="tableText">{pageOwner}</span>
         </SimpleTableCell>
     );
 }
