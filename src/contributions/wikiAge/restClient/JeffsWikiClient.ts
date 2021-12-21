@@ -22,7 +22,7 @@ export interface WikiPageVJSP {
     url: string;
     remoteUrl: string;
     id: number;
-    content: any;
+    content: string;
 }
 
 export class WikiPageBatchClient extends RestClientBase {

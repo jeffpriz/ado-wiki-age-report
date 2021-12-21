@@ -26,6 +26,7 @@ import * as TableSetup from "./tableDataItems";
 import * as GetGit from "./GitOps";
 import * as TimeCalc from "./Time";
 
+
 interface IWikiAgeState {
     projectID:string;
     projectName:string;
@@ -35,7 +36,8 @@ interface IWikiAgeState {
     pageTableRows:TableSetup.PageTableItem[];
     doneLoading:boolean;
     daysThreshold:number;
-    emptyWiki:boolean
+    emptyWiki:boolean;
+    renderOwners:boolean;
 }
 
 
@@ -60,7 +62,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
     public initEmptyState():IWikiAgeState
     {
-        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[],doneLoading:false,daysThreshold:90, emptyWiki:true};
+        let initState:IWikiAgeState = {projectID:"", projectName:"", projectWikiID:"", projectWikiName:"", projectWikiRepoID:"", pageTableRows:[],doneLoading:false,daysThreshold:90, emptyWiki:true, renderOwners:false};
         return initState;
     }
 
@@ -124,7 +126,12 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                     let pageDetail:WikiPageVJSP[] = await GetWiki.GetPageDetails(bclient,s.projectID,w.id,pgList);
                     
                     await this.MergePageDetails(tblRow, pageDetail);
-                    
+                    tblRow.forEach(r => {
+                        if(r.pageOwner.trim().length > 0)
+                        {
+                            s.renderOwners = true;
+                        }
+                    });
                     try {
                         let gitDetails:GitItem[] = await this.GetGitDetailsForPages(tblRow, w.repositoryId, s.projectID);
                         await this.MergeGitDetails(tblRow,gitDetails);
@@ -144,7 +151,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                 }
                 catch(ex)
                 {
-                    this.toastError("During Work : " + JSON.stringify(ex))
+                    this.toastError("During Work : " + ex + JSON.stringify(ex))
                 }
 
                 s.doneLoading=true;
@@ -201,6 +208,8 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                 {                    
                     tableRows[ndx].fileName = detail.gitItemPath;
                     tableRows[ndx].pageURL = detail.remoteUrl;                    
+                    tableRows[ndx].pageOwner = this.FindOwnerTextInPage(detail.content);
+
                 }    
                 ndx++;
             } while(ndx < tableRows.length)
@@ -208,6 +217,50 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
 
         
 
+    }
+
+    private FindOwnerTextInPage(pageContent:string):string
+    {
+        let result:string = "";
+        let ownerREx = /Owner:/gi;
+
+        let pos = pageContent.search(ownerREx)
+        if(pos == -1)
+        {
+            result ="" //no owner found
+        }
+        else
+        {
+           
+           let contentLines:string[] = this.splitLines(pageContent);           
+           let ownerFound:boolean = false;
+           let ndx =0;
+           if(contentLines.length >0)
+           {
+                do{
+                    let ownerPos = contentLines[ndx].indexOf("Owner:");
+                    if(ownerPos > -1)
+                    {                     
+                        result = contentLines[ndx].substring(ownerPos +6);                        
+                        ownerFound = true;
+                    }
+
+                    ndx++;
+                } while (!ownerFound && ndx < contentLines.length);
+            }
+        }
+        
+
+        return result.trim();
+    }
+
+    private splitLines(pageContent:string):string[]
+    {
+        let stringResult:string[] = [];
+
+        stringResult = pageContent.split(/\r\n|\r|\n/);
+
+        return stringResult
     }
 
 
@@ -238,7 +291,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                 if(detail != undefined)
                 {
                     
-                    tableRows[ndx].updateTimestamp = detail.latestProcessedChange.committer.date.toString();
+                    tableRows[ndx].updateTimestamp = detail.latestProcessedChange.committer.date.toLocaleDateString('en-us', { weekday:"long", year:"numeric", month:"long", day:"numeric"}) 
                     tableRows[ndx].updatedBy = detail.latestProcessedChange.committer.name;
                     tableRows[ndx].updateDateMili = detail.latestProcessedChange.committer.date.valueOf();
                     let timeDiffMili:number = currentDate.valueOf() - detail.latestProcessedChange.committer.date.valueOf();
@@ -378,8 +431,9 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
         let projectNameTitle:string = "Project: " + this.state.projectName;
         let wikiName = this.state.projectWikiName;
         let doneLoading:boolean = this.state.doneLoading;
+        let renderOwners = this.state.renderOwners;
         let failedFindingWikiPages:boolean = this.state.emptyWiki;
-
+        let tableColumns = [];
         let tableItemsNoIcons = new ArrayItemProvider<TableSetup.PageTableItem>(
             this.state.pageTableRows.map((item: TableSetup.PageTableItem) => {
                 const newItem = Object.assign({}, item);
@@ -413,7 +467,16 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
             }
             else 
             {
+                if(renderOwners)
+                {
+                    tableColumns = TableSetup.wikiPageColumnsWitOwner;
+                }
+                else
+                {
+                    tableColumns = TableSetup.wikiPageColumns;
+                }
                 return (
+                    
                     <Page className="sample-hub flex-grow">
                         
                         <Card className="selectionCard flex-row" >     
@@ -439,7 +502,7 @@ class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
                         </Card>
                         <Table
                             ariaLabel="Wiki Page Table"
-                            columns={TableSetup.wikiPageColumns}
+                            columns={tableColumns}
                             itemProvider={tableItemsNoIcons}
                             role="table"
                             className="wiTable"

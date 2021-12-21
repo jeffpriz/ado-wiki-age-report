@@ -42,7 +42,7 @@ export async function GetPageDetails(wClient:WikiPageBatchClient, projectID:stri
     
     return new Promise<WikiPageVJSP[]>(async (resolve,reject) => {    
         pageList.forEach(currentPage => {
-            let p:Promise<WikiPageVJSP> = wClient.getPageById(projectID,wikiID,currentPage.id,VersionControlRecursionType.None,false);
+            let p:Promise<WikiPageVJSP> = wClient.getPageById(projectID,wikiID,currentPage.id,VersionControlRecursionType.None,true);
             pagePromises.push(p);
         });  //end foreach
     
