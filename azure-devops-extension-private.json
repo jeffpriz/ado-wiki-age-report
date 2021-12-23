@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "wikiAgeTest",
     "publisher": "OneLuckiDev",
-    "version": "1.0.27",
+    "version": "1.0.90",
 
 
     "name": "Wiki Age Report Test",
@@ -71,7 +71,9 @@
     "scopes": [
         "vso.code",
         "vso.code_status",
-        "vso.wiki_write"
+        "vso.wiki_write",
+        "vso.project",
+        "vso.work_write"
     ],
     "links": {
         "support": {
