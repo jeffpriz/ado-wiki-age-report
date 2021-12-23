@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "wikiAge",
     "publisher": "OneLuckiDev",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "name": "Wiki Age Report",
     "description": "Get insight in to potentially stale and out of date documentation",
     "public": true,
@@ -69,7 +69,9 @@
     "scopes": [
         "vso.code",
         "vso.code_status",
-        "vso.wiki_write"
+        "vso.wiki_write",
+        "vso.project",
+        "vso.work_write"
     ],
     "links": {
         "support": {

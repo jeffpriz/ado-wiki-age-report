@@ -29,7 +29,7 @@ export async function FindProjectWiki(wClient:WikiRestClient, projectID:string):
         }
         if(!success)
         { 
-            reject("no project wiki found")
+            reject("No Project wiki was found for the Project");
         }
     });
 }
