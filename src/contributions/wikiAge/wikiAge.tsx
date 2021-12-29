@@ -87,21 +87,21 @@ export class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
             id: "statusCol",        
             readonly: true,
             renderCell: this.renderStatus,
-            width: new ObservableValue(-6),
+            width: new ObservableValue(-9),
         },
         {        
             id: "workItemType",
             name: "Work Item",
             readonly: true,
             renderCell: this.RenderWorkItemButton,
-            width: new ObservableValue(-28)
+            width: new ObservableValue(-30)
         },
         {
             id: "pagePath",
             name: "Page Path",
             readonly: true,
             renderCell: this.RenderIDLink,
-            width: new ObservableValue(-125),
+            width: new ObservableValue(-100),
         },
         {
             id: "daysOld",
@@ -131,7 +131,7 @@ export class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
             id: "statusCol",        
             readonly: true,
             renderCell: this.renderStatus,
-            width: new ObservableValue(-6),
+            width: new ObservableValue(-9),
         },
      
         {        
@@ -139,14 +139,14 @@ export class WikiAgeContent extends React.Component<{}, IWikiAgeState> {
             name: "Work Item",
             readonly: true,
             renderCell: this.RenderWorkItemButton,
-            width: new ObservableValue(-28)
+            width: new ObservableValue(-30)
         },
         {
             id: "pagePath",
             name: "Page Path",
             readonly: true,
             renderCell: this.RenderIDLink,
-            width: new ObservableValue(-120),
+            width: new ObservableValue(-100),
         },
         {
             id: "daysOld",
