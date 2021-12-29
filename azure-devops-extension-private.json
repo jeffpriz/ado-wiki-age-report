@@ -41,6 +41,10 @@
             "addressable":true
         },
         {
+            "path":"images/screenshot1.PNG",
+            "addressable":true
+        },
+        {
             "path": "dist",
             "addressable": true
         }
